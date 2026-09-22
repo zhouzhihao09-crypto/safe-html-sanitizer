@@ -12,6 +12,14 @@ A small, security-focused HTML sanitization library for Java 21.
 
 ---
 
+## Overview
+
+**Untrusted HTML** → **Parse DOM** → **Apply policy** → **Remove dangerous elements/attributes** → **Validate URLs** → **Serialize** → **Sanitized HTML + SecurityReport**
+
+![SafeHTML Sanitizer Architecture](docs/safehtml-architecture.svg)
+
+---
+
 ## Problem Being Solved
 
 Web applications routinely render user-supplied HTML (comments, forum posts, CMS
@@ -240,6 +248,12 @@ mvn test
 ```
 
 ## Demo
+
+![SafeHTML Demo Screenshot](docs/images/sanitizer-demo.png)
+
+![SafeHTML Demo GIF](docs/images/sanitizer-demo.gif)
+
+*A live demo showing malicious HTML (with `<script>`, `onclick`, and `javascript:` URL attacks) being transformed into safe output alongside a detailed security report.*
 
 A small, zero-dependency HTTP server is included for live demonstration.
 It uses Java's built-in `com.sun.net.httpserver` (no Spring, no database).

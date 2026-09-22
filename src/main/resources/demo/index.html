@@ -198,6 +198,11 @@
 
     // Show original input escaped on load
     document.getElementById('beforeOutput').textContent = document.getElementById('input').value;
+
+    // Auto-sanitize when ?auto=1 is present (for screenshots/demo recording)
+    if (window.location.search.includes('auto=1')) {
+      sanitizeHtml();
+    }
   </script>
 </body>
 </html>
