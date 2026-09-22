@@ -17,9 +17,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-
-      - name: Cache Maven dependencies
-        uses: actions/setup-maven@v4
+          cache: maven
 
       - name: Build and test
         run: mvn --batch-mode clean test
