@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SafeHTML Sanitizer Demo</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f2f5; color: #1a1a2e; line-height: 1.6;
+    }
+    header {
+      background: #1a1a2e; color: #fff; padding: 1.5rem 2rem;
+    }
+    header h1 { font-size: 1.6rem; }
+    header p { opacity: 0.8; margin-top: 0.3rem; font-size: 0.9rem; }
+    main { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+    section {
+      background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem; padding: 1.25rem;
+    }
+    h2 { font-size: 1.15rem; margin-bottom: 0.75rem; color: #1a1a2e; }
+    .example-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .example-buttons button {
+      font-size: 0.8rem; padding: 0.4rem 0.9rem; border: 1px solid #ddd;
+      border-radius: 4px; cursor: pointer; background: #fafafa;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .example-buttons button:hover { background: #f0f0f0; border-color: #999; }
+    textarea {
+      width: 100%; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+      font-size: 0.85rem; padding: 0.75rem; border: 1px solid #ddd;
+      border-radius: 4px; resize: vertical; min-height: 140px;
+      background: #fdfdfd; color: #333;
+    }
+    .sanitize-btn {
+      background: #2563eb; color: #fff; border: none; border-radius: 6px;
+      padding: 0.6rem 1.5rem; font-size: 0.95rem; cursor: pointer;
+      margin-top: 0.75rem; font-weight: 600; transition: background 0.15s;
+    }
+    .sanitize-btn:hover { background: #1d4ed8; }
+    .sanitize-btn:active { background: #1e40af; }
+    .sanitize-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+    .comparison { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .comparison > div { flex: 1; min-width: 300px; }
+    .result-box {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+      font-size: 0.85rem; white-space: pre-wrap; word-wrap: break-word;
+      padding: 0.75rem; border-radius: 4px; border: 1px solid #ddd;
+      max-height: 200px; overflow: auto;
+      background: #fafafa; color: #333;
+    }
+    .result-box.safe { background: #f0fdf4; border-color: #86efac; color: #166534; }
+    .result-box.danger { background: #fef2f2; border-color: #fca5a5; color: #991b1b; }
+    .label { font-size: 0.8rem; font-weight: 600; margin-bottom: 0.35rem; color: #475569; }
+    .report-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+    .report-stat { text-align: center; padding: 0.75rem; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0; }
+    .report-stat .num { font-size: 1.75rem; font-weight: 700; color: #1a1a2e; }
+    .report-stat .label { font-size: 0.75rem; color: #647489; text-transform: uppercase; letter-spacing: 0.05em; }
+    .report-list { list-style: none; }
+    .report-list li {
+      font-family: 'SFMono-Regular', Consolas, monospace; font-size: 0.82rem;
+      padding: 0.25rem 0; border-bottom: 1px solid #f1f5f9; color: #334155;
+    }
+    .report-list li:last-child { border-bottom: none; }
+    .report-list .tag { color: #dc2626; font-weight: 600; }
+    .report-list .attr { color: #be123b; font-weight: 600; }
+    .report-list .url { color: #ea580c; font-weight: 600; }
+    .empty-msg { color: #94a3b8; font-style: italic; font-size: 0.85rem; }
+    footer { text-align: center; padding: 1rem; color: #94a3b8; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>SafeHTML Sanitizer Demo</h1>
+    <p>Educational/demo for the SafeHTML HTML sanitization library &middot; Java 21 + jsoup</p>
+  </header>
+  <main>
+    <section>
+      <h2>Untrusted HTML Input</h2>
+      <p style="color:#647489; font-size:0.85rem; margin-bottom:0.5rem;">
+        Edit the HTML below, then click sanitize. Use the example buttons for common attack vectors.
+      </p>
+      <div class="example-buttons">
+        <button onclick="loadExample('script')">Script Injection</button>
+        <button onclick="loadExample('event')">Event Handler</button>
+        <button onclick="loadExample('jsurl')">JavaScript URL</button>
+        <button onclick="loadExample('svg')">SVG Payload</button>
+        <button onclick="loadExample('safe')">Harmless HTML</button>
+      </div>
+      <textarea id="input"><p>Hello</p>
+<script>alert('XSS')</script>
+<a href="javascript:alert(1)">Click me</a>
+<img src="x" onerror="alert(1)"></textarea>
+      <button class="sanitize-btn" id="sanitizeBtn" onclick="sanitizeHtml()">Sanitize HTML</button>
+    </section>
+    <section>
+      <h2>Before / After</h2>
+      <div class="comparison">
+        <div>
+          <div class="label">Original Input</div>
+          <div class="result-box danger" id="beforeOutput"></div>
+        </div>
+        <div>
+          <div class="label">Sanitized Output</div>
+          <div class="result-box safe" id="afterOutput"></div>
+        </div>
+      </div>
+    </section>
+    <section>
+      <h2>Security Report</h2>
+      <div class="report-grid">
+        <div class="report-stat"><div class="num" id="statTotal">-</div><div class="label">Total Modifications</div></div>
+        <div class="report-stat"><div class="num" id="statElements">-</div><div class="label">Elements Removed</div></div>
+        <div class="report-stat"><div class="num" id="statAttrs">-</div><div class="label">Attributes Removed</div></div>
+        <div class="report-stat"><div class="num" id="statUrls">-</div><div class="label">URLs Blocked</div></div>
+        <div class="report-stat"><div class="num" id="statComments">-</div><div class="label">Comments Removed</div></div>
+      </div>
+      <div style="margin-top:1rem;">
+        <ul class="report-list" id="reportDetails"></ul>
+      </div>
+    </section>
+  </main>
+  <footer>
+    SafeHTML Sanitizer Demo &mdash; Educational portfolio project, not for production use.
+  </footer>
+
+  <script>
+    var examples = {
+      script: '<p>Hello</p>\n<script>alert(\'XSS\')</script>\n<a href="javascript:alert(1)">Click me</a>\n<img src="x" onerror="alert(1)">',
+      event:  '<p onclick="alert(\'XSS\')">Click me</p>\n<div style="background:url(javascript:alert(1))">test</div>',
+      jsurl:  '<a href="javascript:alert(document.cookie)">dangerous link</a>\n<a href="vbscript:msgbox(1)">also bad</a>',
+      svg:    '<svg onload="alert(1)"><script>alert(2)</script></svg>\n<math><maction actiontype="statusline" xlink:href="javascript:alert(3)">x</maction></math>',
+      safe:   '<p>Hello <strong>world</strong></p>\n<em>Enjoy!</em>\n<ul><li>Item 1</li><li>Item 2</li></ul>'
+    };
+
+    function loadExample(key) {
+      document.getElementById('input').value = examples[key];
+    }
+
+    function escapeHtml(text) {
+      var div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function sanitizeHtml() {
+      var btn = document.getElementById('sanitizeBtn');
+      btn.disabled = true;
+      var input = document.getElementById('input').value;
+      document.getElementById('beforeOutput').textContent = input;
+
+      fetch('/sanitize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: input
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var afterBox = document.getElementById('afterOutput');
+        afterBox.textContent = data.sanitizedHtml;
+        var report = data.report;
+        document.getElementById('statTotal').textContent = report.totalModifications;
+        document.getElementById('statElements').textContent = report.removedElements.length;
+        document.getElementById('statAttrs').textContent = report.removedAttributes.length;
+        document.getElementById('statUrls').textContent = report.blockedUrls.length;
+        document.getElementById('statComments').textContent = report.removedComments.length;
+
+        var list = document.getElementById('reportDetails');
+        list.innerHTML = '';
+        var items = [];
+        report.removedElements.forEach(function(e) {
+          items.push('<li><span class="tag">' + escapeHtml(e.tagName) + '</span> removed (parent: ' + escapeHtml(e.parentName) + ')</li>');
+        });
+        report.removedAttributes.forEach(function(a) {
+          items.push('<li><span class="attr">' + escapeHtml(a.attrName) + '</span> removed from <span class="tag">' + escapeHtml(a.elementName) + '</span></li>');
+        });
+        report.blockedUrls.forEach(function(u) {
+          items.push('<li><span class="url">' + escapeHtml(u.url) + '</span> blocked in ' + escapeHtml(u.attrName) + ' on <span class="tag">' + escapeHtml(u.elementName) + '</span> (scheme: ' + escapeHtml(u.blockedScheme) + ')</li>');
+        });
+        report.removedComments.forEach(function(c) {
+          items.push('<li>Comment removed: ' + escapeHtml(c) + '</li>');
+        });
+        if (items.length === 0) {
+          list.innerHTML = '<li class="empty-msg">No modifications &mdash; input was already safe.</li>';
+        } else {
+          list.innerHTML = items.join('');
+        }
+      })
+      .catch(function(err) {
+        document.getElementById('afterOutput').textContent = 'Error: ' + err.message;
+      })
+      .finally(function() {
+        btn.disabled = false;
+      });
+    }
+
+    // Show original input escaped on load
+    document.getElementById('beforeOutput').textContent = document.getElementById('input').value;
+  </script>
+</body>
+</html>

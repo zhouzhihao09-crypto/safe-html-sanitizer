@@ -203,10 +203,10 @@ XSS payloads covered include `<script>`, `<img onerror>`, `<svg onload>`,
 `<iframe>`, `<a href="javascript:...">`, HTML-entity obfuscation, tab/newline
 obfuscation, case-variant schemes, and nested combinations.
 
-The full suite runs **352 tests** with zero failures, covering security
+The full suite runs **363 tests** with zero failures, covering security
 invariants (250+ parameterized XSS vectors), policy bypass prevention
-(29 dangerous elements + 42 event handlers), and end-to-end sanitization
-behavior.
+(29 dangerous elements + 42 event handlers), end-to-end sanitization
+behavior, and demo server HTTP endpoints.
 
 ## Current Limitations
 
@@ -236,6 +236,57 @@ The compiled JAR is produced at `target/safe-html-sanitizer-1.0.0-SNAPSHOT.jar`.
 ```bash
 mvn test
 ```
+
+## Demo
+
+A small, zero-dependency HTTP server is included for live demonstration.
+It uses Java's built-in `com.sun.net.httpserver` (no Spring, no database).
+
+### Starting the demo
+
+```bash
+# Compile and start the demo server (default port: 8080)
+mvn compile exec:java -Dexec.mainClass=com.safehtml.demo.DemoServer
+
+# Or with a custom port
+mvn compile exec:java -Dexec.mainClass=com.safehtml.demo.DemoServer -Dexec.args="9090"
+```
+
+Then open <http://localhost:8080/> in a browser.
+
+### What the demo shows
+
+```
+UNTRUSTED HTML ──► SafeHTML Sanitizer ──► SANITIZED HTML (safe, escaped display)
+                          │
+                          └──► SECURITY REPORT (removed elements, attributes,
+                                    blocked URLs, removed comments)
+```
+
+The browser UI includes:
+- A **textarea** pre-filled with a malicious HTML example (editable)
+- **Example attack buttons** (script injection, event handler, javascript: URL, SVG payload, harmless HTML)
+- A **"Sanitize HTML"** button that sends the input to the backend
+- A **Before/After** comparison showing the original input and the sanitized output side by side
+- A **Security Report** with summary statistics and a detailed list of all modifications
+
+### Example malicious input
+
+```html
+<p>Hello</p>
+<script>alert('XSS')</script>
+<a href="javascript:alert(1)">Click me</a>
+<img src="x" onerror="alert(1)">
+```
+
+### Security considerations for the demo
+
+- The sanitized HTML is displayed using `textContent` (never `innerHTML`), so
+  it cannot be rendered as active HTML — preventing XSS in the demo itself.
+- User input is never injected into server-side templates.
+- `exec:java` is for local demonstration only.
+
+> **This demo is for educational/portfolio purposes. It is not production-ready.**
 
 ## Roadmap
 
