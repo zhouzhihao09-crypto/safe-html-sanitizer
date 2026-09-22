@@ -1,5 +1,7 @@
 # SafeHTML
 
+[![CI](https://github.com/zhouzhihao09-crypto/safe-html-sanitizer/actions/workflows/ci.yml/badge.svg)](https://github.com/zhouzhihao09-crypto/safe-html-sanitizer/actions/workflows/ci.yml)
+
 A small, security-focused HTML sanitization library for Java 21.
 
 > ** WARNING: EXPERIMENTAL / EDUCATIONAL **
